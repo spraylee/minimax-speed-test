@@ -93,9 +93,21 @@ async function testModel(
 }
 
 async function runTests() {
+  const now = new Date();
+  const testTime = now.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
   console.log("=".repeat(60));
   console.log("MiniMax M2.1 / M2.5 / M2.5-highspeed 速度对比测试");
   console.log("=".repeat(60));
+  console.log(`测试时间: ${testTime}`);
   console.log(`Base URL: ${BASE_URL}`);
   console.log(`限制生成 token: ${MAX_TOKENS}`);
   console.log(`测试次数: ${TEST_COUNT} 次/模型`);
