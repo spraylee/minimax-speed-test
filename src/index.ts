@@ -32,6 +32,9 @@ const TEST_PROMPTS = [
 
 // 每个模型测试次数
 const TEST_COUNT = 3;
+
+// 限制生成的 token 数量（所有模型使用相同限制）
+const MAX_TOKENS = 256;
 // ==================== 配置结束 ====================
 
 // 创建各个模型的客户端
@@ -51,6 +54,7 @@ interface TestResult {
   label: string;
   prompt: string;
   duration: number; // 毫秒
+  outputTokens: number;
   tokensPerSecond?: number;
 }
 
@@ -64,7 +68,7 @@ async function testModel(
 
   const response = await client.messages.create({
     model: modelName,
-    max_tokens: 512,
+    max_tokens: MAX_TOKENS,
     messages: [
       {
         role: "user",
@@ -83,6 +87,7 @@ async function testModel(
     label: modelLabel,
     prompt,
     duration,
+    outputTokens,
     tokensPerSecond,
   };
 }
@@ -92,6 +97,7 @@ async function runTests() {
   console.log("MiniMax M2.1 / M2.5 / M2.5-highspeed 速度对比测试");
   console.log("=".repeat(60));
   console.log(`Base URL: ${BASE_URL}`);
+  console.log(`限制生成 token: ${MAX_TOKENS}`);
   console.log(`测试次数: ${TEST_COUNT} 次/模型`);
   console.log("=".repeat(60));
   console.log();
@@ -117,7 +123,7 @@ async function runTests() {
           );
           results.push(result);
           const tps = result.tokensPerSecond
-            ? `(${result.tokensPerSecond.toFixed(1)} tok/s)`
+            ? `(${result.tokensPerSecond.toFixed(1)} tok/s, ${result.outputTokens} tokens)`
             : "";
           console.log(
             `  ✅ ${result.duration}ms ${tps} - ${prompt.slice(0, 20)}...`
@@ -141,6 +147,8 @@ async function runTests() {
     const modelResults = results.filter((r) => r.model === model.name);
     const avgDuration =
       modelResults.reduce((a, b) => a + b.duration, 0) / modelResults.length;
+    const avgTokens =
+      modelResults.reduce((a, b) => a + b.outputTokens, 0) / modelResults.length;
     const validTpsResults = modelResults.filter((r) => r.tokensPerSecond);
     const avgTps =
       validTpsResults.reduce((a, b) => a + (b.tokensPerSecond || 0), 0) /
@@ -149,29 +157,36 @@ async function runTests() {
     console.log();
     console.log(`📈 ${model.name} (${model.label}):`);
     console.log(`   平均响应时间: ${avgDuration.toFixed(0)}ms`);
+    console.log(`   平均生成 token 数: ${avgTokens.toFixed(0)}`);
     console.log(`   平均生成速度: ${avgTps.toFixed(1)} tokens/s`);
     console.log(`   总测试次数: ${modelResults.length}`);
   }
 
-  // 对比结论
+  // 对比结论 - 基于 tokens/s
   console.log();
   console.log("=".repeat(60));
-  console.log("🏆 对比结论:");
+  console.log("🏆 对比结论 (基于 tokens/s):");
   console.log("=".repeat(60));
 
   const baseModel = MODELS[MODELS.length - 1]; // M2.1 作为基准
   const baseResults = results.filter((r) => r.model === baseModel.name);
-  const baseAvgDuration =
-    baseResults.reduce((a, b) => a + b.duration, 0) / baseResults.length;
+  const baseAvgTps =
+    baseResults
+      .filter((r) => r.tokensPerSecond)
+      .reduce((a, b) => a + (b.tokensPerSecond || 0), 0) /
+    baseResults.filter((r) => r.tokensPerSecond).length;
 
   for (let i = 0; i < MODELS.length - 1; i++) {
     const model = MODELS[i];
     const modelResults = results.filter((r) => r.model === model.name);
-    const avgDuration =
-      modelResults.reduce((a, b) => a + b.duration, 0) / modelResults.length;
+    const avgTps =
+      modelResults
+        .filter((r) => r.tokensPerSecond)
+        .reduce((a, b) => a + (b.tokensPerSecond || 0), 0) /
+      modelResults.filter((r) => r.tokensPerSecond).length;
 
-    const speedup = ((baseAvgDuration - avgDuration) / baseAvgDuration * 100).toFixed(1);
-    console.log(`   ${model.name} 比 ${baseModel.name} 快 ${speedup}%`);
+    const speedup = ((avgTps - baseAvgTps) / baseAvgTps * 100).toFixed(1);
+    console.log(`   ${model.name} 比 ${baseModel.name} 生成速度快 ${speedup}%`);
   }
 
   console.log("=".repeat(60));
