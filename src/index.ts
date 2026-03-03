@@ -168,7 +168,7 @@ async function runTests() {
   console.log("🏆 对比结论 (基于 tokens/s):");
   console.log("=".repeat(60));
 
-  const baseModel = MODELS[MODELS.length - 1]; // M2.1 作为基准
+  const baseModel = MODELS[1]; // M2.5 标准版作为基准
   const baseResults = results.filter((r) => r.model === baseModel.name);
   const baseAvgTps =
     baseResults
@@ -176,7 +176,8 @@ async function runTests() {
       .reduce((a, b) => a + (b.tokensPerSecond || 0), 0) /
     baseResults.filter((r) => r.tokensPerSecond).length;
 
-  for (let i = 0; i < MODELS.length - 1; i++) {
+  for (let i = 0; i < MODELS.length; i++) {
+    if (i === 1) continue; // 跳过基准模型 M2.5
     const model = MODELS[i];
     const modelResults = results.filter((r) => r.model === model.name);
     const avgTps =
