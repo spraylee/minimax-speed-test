@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useTRPC } from "@/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -100,9 +100,8 @@ export function History() {
                 </TableHeader>
                 <TableBody>
                   {data.runs.map((run) => (
-                    <>
+                    <Fragment key={run.id}>
                       <TableRow
-                        key={run.id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() =>
                           setExpandedRunId(
@@ -165,13 +164,13 @@ export function History() {
                         )}
                       </TableRow>
                       {expandedRunId === run.id && (
-                        <TableRow key={`${run.id}-detail`}>
+                        <TableRow>
                           <TableCell colSpan={isLoggedIn() ? 8 : 7} className="p-0">
                             <RunDetail runId={run.id} />
                           </TableCell>
                         </TableRow>
                       )}
-                    </>
+                    </Fragment>
                   ))}
                 </TableBody>
               </Table>
