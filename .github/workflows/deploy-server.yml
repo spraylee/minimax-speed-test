@@ -1,0 +1,93 @@
+name: Deploy Server
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "apps/server/**"
+      - "docker-compose.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-server.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: minimax-speed-test
+      DEPLOY_PATH: /data/apps/minimax-speed-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-package
+
+          # Docker 配置
+          cp docker-compose.yml deploy-package/
+
+          # 后端代码
+          mkdir -p deploy-package/apps/server
+          cp apps/server/Dockerfile deploy-package/apps/server/
+          cp apps/server/docker-entrypoint.sh deploy-package/apps/server/
+          cp apps/server/package.json deploy-package/apps/server/
+          cp apps/server/prisma.config.ts deploy-package/apps/server/
+          cp apps/server/tsconfig.json deploy-package/apps/server/
+          cp apps/server/tsup.config.ts deploy-package/apps/server/
+          cp -r apps/server/src deploy-package/apps/server/
+          cp -r apps/server/prisma deploy-package/apps/server/
+
+          # 根目录配置
+          cp package.json deploy-package/
+          cp pnpm-lock.yaml deploy-package/
+          cp pnpm-workspace.yaml deploy-package/
+
+          tar -czvf /tmp/server.tar.gz -C deploy-package .
+          mv /tmp/server.tar.gz .
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "server.tar.gz"
+          target: "${{ env.DEPLOY_PATH }}"
+
+      - name: Build and start container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            set -e
+            cd ${{ env.DEPLOY_PATH }}
+
+            rm -rf deploy.bak
+            [ -d deploy ] && mv deploy deploy.bak
+            mkdir -p deploy
+            tar -xzf server.tar.gz -C deploy
+            rm -f server.tar.gz
+
+            if [ ! -f .env ]; then
+              echo "ERROR: .env file not found!"
+              echo "Please create ${{ env.DEPLOY_PATH }}/.env with required variables"
+              exit 1
+            fi
+
+            cd deploy
+            docker compose build
+            docker compose up -d
+
+            sleep 5
+            if ! docker compose ps | grep -q "Up"; then
+              echo "ERROR: Container failed to start"
+              docker compose logs --tail=50
+              exit 1
+            fi
+
+            echo "Server deployed successfully!"

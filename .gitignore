@@ -22,6 +22,9 @@ dist/
 build/
 out/
 
+# Prisma
+apps/server/src/generated/
+
 # Misc
 .DS_Store
 *.swp

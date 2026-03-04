@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// 一次基准测试运行（一次定时任务执行）
+model BenchmarkRun {
+  id        Int       @id @default(autoincrement())
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  status    String    @default("running") // "running" | "completed" | "failed"
+  results   BenchmarkResult[]
+
+  @@map("benchmark_runs")
+}
+
+/// 单条测试结果（一个模型 + 一个 prompt 的测试数据）
+model BenchmarkResult {
+  id              Int          @id @default(autoincrement())
+  runId           Int
+  run             BenchmarkRun @relation(fields: [runId], references: [id])
+  model           String
+  label           String
+  prompt          String       @db.Text
+  duration        Int          // 毫秒
+  outputTokens    Int
+  tokensPerSecond Float?
+  maxTokens       Int
+  error           String?      @db.Text
+  createdAt       DateTime     @default(now())
+
+  @@index([runId])
+  @@index([model, createdAt])
+  @@map("benchmark_results")
+}
