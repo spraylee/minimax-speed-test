@@ -28,7 +28,9 @@ export function Dashboard() {
   const triggerMutation = useMutation(
     trpc.benchmark.triggerRun.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries();
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.listRuns.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getModelTrends.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getLatestComparison.queryKey() });
       },
     })
   );
