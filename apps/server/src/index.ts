@@ -10,10 +10,9 @@ import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { verify } from "hono/jwt";
+import { Jwt } from "hono/utils/jwt";
 import { appRouter } from "./trpc/router.js";
 import { startScheduler } from "./scheduler.js";
-import type { Context } from "./trpc/trpc.js";
 
 const app = new Hono();
 
@@ -31,7 +30,7 @@ app.use(
   trpcServer({
     router: appRouter,
     endpoint: "/api/trpc",
-    createContext: async (_opts, c): Promise<Context> => {
+    createContext: async (_opts, c) => {
       const authHeader = c.req.header("Authorization");
       if (!authHeader?.startsWith("Bearer ")) {
         return {};
@@ -39,7 +38,7 @@ app.use(
       try {
         const token = authHeader.slice(7);
         const secret = process.env.JWT_SECRET || "default-secret";
-        const payload = await verify(token, secret);
+        const payload = await Jwt.verify(token, secret, "HS256");
         return { user: { username: payload.username as string } };
       } catch {
         return {};

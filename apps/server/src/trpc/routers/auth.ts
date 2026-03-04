@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { sign } from "hono/jwt";
+import { Jwt } from "hono/utils/jwt";
 import { publicProcedure, protectedProcedure, router } from "../trpc.js";
 
 export const authRouter = router({
@@ -27,7 +27,7 @@ export const authRouter = router({
       }
 
       const secret = process.env.JWT_SECRET || "default-secret";
-      const token = await sign(
+      const token = await Jwt.sign(
         {
           username: input.username,
           exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 天
