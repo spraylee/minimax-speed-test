@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../../db.js";
 import { runBenchmark } from "../../services/benchmark.js";
-import { publicProcedure, router } from "../trpc.js";
+import { publicProcedure, protectedProcedure, router } from "../trpc.js";
 
 export const benchmarkRouter = router({
   // 分页查询运行列表
@@ -264,14 +264,14 @@ export const benchmarkRouter = router({
     };
   }),
 
-  // 手动触发一次测试
-  triggerRun: publicProcedure.mutation(async () => {
+  // 手动触发一次测试（需要登录）
+  triggerRun: protectedProcedure.mutation(async () => {
     const runId = await runBenchmark();
     return { runId };
   }),
 
-  // 删除运行记录（级联删除关联的 results）
-  deleteRun: publicProcedure
+  // 删除运行记录（需要登录，级联删除关联的 results）
+  deleteRun: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       // 先删除关联的结果记录，再删除运行记录

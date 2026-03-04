@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SpeedChart } from "@/components/SpeedChart";
 import { LatencyChart } from "@/components/LatencyChart";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { isLoggedIn } from "@/lib/auth";
 import dayjs from "dayjs";
 
 export function Dashboard() {
@@ -48,12 +49,14 @@ export function Dashboard() {
             MiniMax 模型速度对比监控
           </p>
         </div>
-        <Button
-          onClick={() => triggerMutation.mutate()}
-          disabled={triggerMutation.isPending}
-        >
-          {triggerMutation.isPending ? "运行中..." : "手动触发测试"}
-        </Button>
+        {isLoggedIn() && (
+          <Button
+            onClick={() => triggerMutation.mutate()}
+            disabled={triggerMutation.isPending}
+          >
+            {triggerMutation.isPending ? "运行中..." : "手动触发测试"}
+          </Button>
+        )}
       </div>
 
       {/* 统计卡片 */}

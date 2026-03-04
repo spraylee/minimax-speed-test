@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { RunDetail } from "@/components/RunDetail";
+import { isLoggedIn } from "@/lib/auth";
 import dayjs from "dayjs";
 
 export function History() {
@@ -92,7 +93,9 @@ export function History() {
                         {label} (tok/s)
                       </TableHead>
                     ))}
-                    <TableHead className="w-24 text-right">操作</TableHead>
+                    {isLoggedIn() && (
+                      <TableHead className="w-24 text-right">操作</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -126,42 +129,44 @@ export function History() {
                             </TableCell>
                           );
                         })}
-                        <TableCell className="text-right">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-muted-foreground hover:text-destructive"
-                                onClick={(e) => e.stopPropagation()}
-                                disabled={deleteRunMutation.isPending}
-                              >
-                                删除
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>确认删除</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  确定要删除运行记录 #{run.id}（{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}）吗？该操作将同时删除所有关联的测试结果，且不可恢复。
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => deleteRunMutation.mutate({ id: run.id })}
+                        {isLoggedIn() && (
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-muted-foreground hover:text-destructive"
+                                  onClick={(e) => e.stopPropagation()}
+                                  disabled={deleteRunMutation.isPending}
                                 >
-                                  确认删除
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
+                                  删除
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>确认删除</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    确定要删除运行记录 #{run.id}（{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}）吗？该操作将同时删除所有关联的测试结果，且不可恢复。
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>取消</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => deleteRunMutation.mutate({ id: run.id })}
+                                  >
+                                    确认删除
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        )}
                       </TableRow>
                       {expandedRunId === run.id && (
                         <TableRow key={`${run.id}-detail`}>
-                          <TableCell colSpan={8} className="p-0">
+                          <TableCell colSpan={isLoggedIn() ? 8 : 7} className="p-0">
                             <RunDetail runId={run.id} />
                           </TableCell>
                         </TableRow>

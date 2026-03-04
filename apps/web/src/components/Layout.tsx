@@ -1,5 +1,14 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { LogIn, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getUsername, isLoggedIn, logout } from "@/lib/auth";
 
 const navItems = [
   { path: "/", label: "Dashboard" },
@@ -8,6 +17,16 @@ const navItems = [
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const loggedIn = isLoggedIn();
+  const username = getUsername();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+    // 刷新页面以清除所有缓存状态
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,6 +49,41 @@ export function Layout() {
               </Link>
             ))}
           </nav>
+
+          {/* 认证区域 */}
+          <div className="ml-auto">
+            {loggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 rounded-full bg-primary p-0 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    {username?.charAt(0).toUpperCase() || "U"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    退出登录
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() =>
+                  navigate("/login", {
+                    state: { from: location.pathname },
+                  })
+                }
+              >
+                <LogIn className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-screen-xl px-6 py-6">

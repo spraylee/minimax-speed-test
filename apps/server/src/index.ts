@@ -10,8 +10,10 @@ import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serveStatic } from "@hono/node-server/serve-static";
+import { verify } from "hono/jwt";
 import { appRouter } from "./trpc/router.js";
 import { startScheduler } from "./scheduler.js";
+import type { Context } from "./trpc/trpc.js";
 
 const app = new Hono();
 
@@ -29,6 +31,20 @@ app.use(
   trpcServer({
     router: appRouter,
     endpoint: "/api/trpc",
+    createContext: async (_opts, c): Promise<Context> => {
+      const authHeader = c.req.header("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return {};
+      }
+      try {
+        const token = authHeader.slice(7);
+        const secret = process.env.JWT_SECRET || "default-secret";
+        const payload = await verify(token, secret);
+        return { user: { username: payload.username as string } };
+      } catch {
+        return {};
+      }
+    },
   })
 );
 
