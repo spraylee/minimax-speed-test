@@ -25,6 +25,9 @@ out/
 # Prisma
 apps/server/src/generated/
 
+# TypeScript
+*.tsbuildinfo
+
 # Misc
 .DS_Store
 *.swp
