@@ -33,6 +33,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: |
+          cd apps/server
+          echo 'DATABASE_URL="mysql://build:build@localhost:3306/build"' > .env
+          npx prisma generate
+          rm .env
+
       - name: Build
         run: pnpm --filter @minimax-speed-test/web build
 
