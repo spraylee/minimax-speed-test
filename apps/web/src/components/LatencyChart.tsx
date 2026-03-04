@@ -35,8 +35,6 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
   }
   const models = Array.from(modelSet);
 
-  const xData = data.map((d) => dayjs(d.time).format("MM-DD HH:mm"));
-
   const series = models.map((model) => ({
     name: data[0]?.models.find((m) => m.model === model)?.label || model,
     type: "line" as const,
@@ -47,7 +45,7 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
     itemStyle: { color: MODEL_COLORS[model] || undefined },
     data: data.map((d) => {
       const m = d.models.find((m) => m.model === model);
-      return m ? m.avgDuration : null;
+      return [dayjs(d.time).valueOf(), m ? m.avgDuration : null];
     }),
   }));
 
@@ -66,9 +64,11 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
       bottom: 30,
     },
     xAxis: {
-      type: "category",
-      data: xData,
-      axisLabel: { fontSize: 11 },
+      type: "time",
+      axisLabel: {
+        fontSize: 11,
+        formatter: (value: number) => dayjs(value).format("MM-DD HH:mm"),
+      },
     },
     yAxis: {
       type: "value",
