@@ -42,7 +42,7 @@ if (process.env.NODE_ENV === "production") {
   app.get("/*", serveStatic({ root: "./web", path: "index.html" }));
 }
 
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 8010;
 
 serve({ fetch: app.fetch, port }, () => {
   console.log(`[Server] 运行在 http://localhost:${port}`);
