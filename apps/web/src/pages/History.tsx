@@ -45,9 +45,9 @@ export function History() {
   const deleteRunMutation = useMutation(
     trpc.benchmark.deleteRun.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.listRuns.getQueryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getModelTrends.getQueryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getLatestComparison.getQueryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.listRuns.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getModelTrends.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getLatestComparison.queryKey() });
       },
     })
   );
