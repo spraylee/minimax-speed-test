@@ -55,7 +55,7 @@ export function ComparisonTable({ models, startedAt }: Props) {
                   variant={m.speedup > 0 ? "default" : "secondary"}
                   className={
                     m.speedup > 0
-                      ? "bg-green-100 text-green-800 hover:bg-green-100"
+                      ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
                       : ""
                   }
                 >
