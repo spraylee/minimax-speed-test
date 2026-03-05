@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import { useTheme } from "next-themes";
 import {
   LineChart,
   Line,
@@ -30,6 +31,9 @@ const MODEL_COLORS: Record<string, string> = {
 };
 
 export function LatencyChart({ data }: { data: TrendPoint[] }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   if (!data || data.length === 0) {
     return (
       <div className="flex h-[300px] items-center justify-center text-muted-foreground">
@@ -65,7 +69,11 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={chartData} margin={{ top: 8, right: 16, left: 4, bottom: 0 }}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e5e7eb" />
+        <CartesianGrid
+          vertical={false}
+          strokeDasharray="3 3"
+          stroke={isDark ? "#374151" : "#e5e7eb"}
+        />
         <XAxis
           dataKey="time"
           type="number"
@@ -73,14 +81,23 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
           domain={["dataMin", "dataMax"]}
           tickFormatter={(v: number) => dayjs(v).format("MM-DD HH:mm")}
           fontSize={11}
+          stroke={isDark ? "#9ca3af" : "#6b7280"}
+          tick={{ fill: isDark ? "#9ca3af" : "#6b7280" }}
         />
         <YAxis
           fontSize={11}
-          label={{ value: "ms", position: "insideTopLeft", offset: -4, fontSize: 11 }}
+          stroke={isDark ? "#9ca3af" : "#6b7280"}
+          tick={{ fill: isDark ? "#9ca3af" : "#6b7280" }}
+          label={{ value: "ms", position: "insideTopLeft", offset: -4, fontSize: 11, fill: isDark ? "#9ca3af" : "#6b7280" }}
         />
         <Tooltip
           labelFormatter={(v: ReactNode) => dayjs(Number(v)).format("MM-DD HH:mm")}
           formatter={(value: number | undefined) => [`${value ?? '-'} ms`]}
+          contentStyle={{
+            backgroundColor: isDark ? "#1f2937" : "#ffffff",
+            borderColor: isDark ? "#374151" : "#e5e7eb",
+            color: isDark ? "#f9fafb" : "#111827"
+          }}
         />
         <Legend />
         {models.map((model) => (
