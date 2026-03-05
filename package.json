@@ -19,10 +19,5 @@
       "esbuild",
       "prisma"
     ]
-  },
-  "lefthook": {
-    "pre-commit": [
-      "pnpm typecheck"
-    ]
   }
 }
