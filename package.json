@@ -11,7 +11,7 @@
     "build:web": "pnpm --filter @minimax-speed-test/web build",
     "start": "pnpm --filter @minimax-speed-test/server start",
     "typecheck": "pnpm -r typecheck",
-    "prepare": "simple-git-hooks"
+    "prepare": "lefthook install"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -20,10 +20,9 @@
       "prisma"
     ]
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm typecheck"
-  },
-  "devDependencies": {
-    "simple-git-hooks": "^2.13.1"
+  "lefthook": {
+    "pre-commit": [
+      "pnpm typecheck"
+    ]
   }
 }
