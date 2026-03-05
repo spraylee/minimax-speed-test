@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useTRPC } from "@/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -11,16 +13,56 @@ import { Button } from "@/components/ui/button";
 import { SpeedChart } from "@/components/SpeedChart";
 import { LatencyChart } from "@/components/LatencyChart";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { TimeRangeSelector } from "@/components/TimeRangeSelector";
 import { isLoggedIn } from "@/lib/auth";
 import dayjs from "dayjs";
 
 export function Dashboard() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const trendsQuery = useQuery(trpc.benchmark.getModelTrends.queryOptions({}));
+  // 解析 URL 参数或默认 7 天
+  const getInitialRange = () => {
+    const start = searchParams.get("start");
+    const end = searchParams.get("end");
+    if (start && end) {
+      return { start: new Date(start), end: new Date(end) };
+    }
+    const now = new Date();
+    return {
+      start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      end: now,
+    };
+  };
+
+  const [timeRange, setTimeRange] = useState(getInitialRange());
+
+  const handleTimeRangeChange = (
+    range: { start: Date | undefined; end: Date | undefined }
+  ) => {
+    setTimeRange(range);
+    if (range.start && range.end) {
+      setSearchParams({
+        start: range.start.toISOString(),
+        end: range.end.toISOString(),
+      });
+    } else {
+      setSearchParams({});
+    }
+  };
+
+  const trendsQuery = useQuery(
+    trpc.benchmark.getModelTrends.queryOptions({
+      startDate: timeRange.start?.toISOString(),
+      endDate: timeRange.end?.toISOString(),
+    })
+  );
   const comparisonQuery = useQuery(
-    trpc.benchmark.getLatestComparison.queryOptions()
+    trpc.benchmark.getLatestComparison.queryOptions({
+      startDate: timeRange.start?.toISOString(),
+      endDate: timeRange.end?.toISOString(),
+    })
   );
   const runsQuery = useQuery(
     trpc.benchmark.listRuns.queryOptions({ page: 1, pageSize: 1 })
@@ -57,6 +99,11 @@ export function Dashboard() {
             {triggerMutation.isPending ? "运行中..." : "手动触发测试"}
           </Button>
         )}
+      </div>
+
+      {/* 时间范围筛选 */}
+      <div className="flex items-center justify-between">
+        <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
       {/* 统计卡片 */}
