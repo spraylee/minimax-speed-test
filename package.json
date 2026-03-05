@@ -19,5 +19,8 @@
       "esbuild",
       "prisma"
     ]
+  },
+  "devDependencies": {
+    "lefthook": "^2.1.2"
   }
 }
