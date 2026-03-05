@@ -82,98 +82,137 @@ export function History() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">#</TableHead>
-                    <TableHead>时间</TableHead>
-                    <TableHead>状态</TableHead>
-                    {["极速版", "标准版", "M2.1"].map((label) => (
-                      <TableHead key={label} className="text-right">
-                        {label} (tok/s)
-                      </TableHead>
-                    ))}
-                    {isLoggedIn() && (
-                      <TableHead className="w-24 text-right">操作</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.runs.map((run) => (
-                    <Fragment key={run.id}>
-                      <TableRow
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() =>
-                          setExpandedRunId(
-                            expandedRunId === run.id ? null : run.id
-                          )
-                        }
-                      >
-                        <TableCell className="font-mono">{run.id}</TableCell>
-                        <TableCell>
-                          {dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={run.status} />
-                        </TableCell>
-                        {["极速版", "标准版", "M2.1"].map((label) => {
-                          const model = run.models.find(
-                            (m) => m.label === label
-                          );
-                          return (
-                            <TableCell key={label} className="text-right">
-                              {model?.avgTps != null
-                                ? model.avgTps.toFixed(1)
-                                : "-"}
+              {/* 桌面端表格 */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">#</TableHead>
+                      <TableHead>时间</TableHead>
+                      <TableHead>状态</TableHead>
+                      {["极速版", "标准版", "M2.1"].map((label) => (
+                        <TableHead key={label} className="text-right">
+                          {label} (tok/s)
+                        </TableHead>
+                      ))}
+                      {isLoggedIn() && (
+                        <TableHead className="w-24 text-right">操作</TableHead>
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.runs.map((run) => (
+                      <Fragment key={run.id}>
+                        <TableRow
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() =>
+                            setExpandedRunId(
+                              expandedRunId === run.id ? null : run.id
+                            )
+                          }
+                        >
+                          <TableCell className="font-mono">{run.id}</TableCell>
+                          <TableCell>
+                            {dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge status={run.status} />
+                          </TableCell>
+                          {["极速版", "标准版", "M2.1"].map((label) => {
+                            const model = run.models.find(
+                              (m) => m.label === label
+                            );
+                            return (
+                              <TableCell key={label} className="text-right">
+                                {model?.avgTps != null
+                                  ? model.avgTps.toFixed(1)
+                                  : "-"}
+                              </TableCell>
+                            );
+                          })}
+                          {isLoggedIn() && (
+                            <TableCell className="text-right">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-muted-foreground hover:text-destructive"
+                                    onClick={(e) => e.stopPropagation()}
+                                    disabled={deleteRunMutation.isPending}
+                                  >
+                                    删除
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>确认删除</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      确定要删除运行记录 #{run.id}（{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}）吗？该操作将同时删除所有关联的测试结果，且不可恢复。
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>取消</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      onClick={() => deleteRunMutation.mutate({ id: run.id })}
+                                    >
+                                      确认删除
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </TableCell>
+                          )}
+                        </TableRow>
+                        {expandedRunId === run.id && (
+                          <TableRow>
+                            <TableCell colSpan={isLoggedIn() ? 8 : 7} className="p-0">
+                              <RunDetail runId={run.id} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* 移动端卡片 */}
+              <div className="md:hidden space-y-4">
+                {data.runs.map((run) => (
+                  <Card key={run.id} className="cursor-pointer" onClick={() => setExpandedRunId(expandedRunId === run.id ? null : run.id)}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Run #{run.id}</CardTitle>
+                        <StatusBadge status={run.status} />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">时间</span>
+                          <span>{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}</span>
+                        </div>
+                        {["极速版", "标准版", "M2.1"].map((label) => {
+                          const model = run.models.find((m) => m.label === label);
+                          return (
+                            <div key={label} className="flex justify-between">
+                              <span className="text-muted-foreground">{label}</span>
+                              <span>{model?.avgTps != null ? model.avgTps.toFixed(1) : "-"} tok/s</span>
+                            </div>
                           );
                         })}
-                        {isLoggedIn() && (
-                          <TableCell className="text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-muted-foreground hover:text-destructive"
-                                  onClick={(e) => e.stopPropagation()}
-                                  disabled={deleteRunMutation.isPending}
-                                >
-                                  删除
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>确认删除</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    确定要删除运行记录 #{run.id}（{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}）吗？该操作将同时删除所有关联的测试结果，且不可恢复。
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>取消</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => deleteRunMutation.mutate({ id: run.id })}
-                                  >
-                                    确认删除
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        )}
-                      </TableRow>
+                      </div>
                       {expandedRunId === run.id && (
-                        <TableRow>
-                          <TableCell colSpan={isLoggedIn() ? 8 : 7} className="p-0">
-                            <RunDetail runId={run.id} />
-                          </TableCell>
-                        </TableRow>
+                        <div className="mt-4 pt-4 border-t">
+                          <RunDetail runId={run.id} />
+                        </div>
                       )}
-                    </Fragment>
-                  ))}
-                </TableBody>
-              </Table>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
               {/* 分页 */}
               {totalPages > 1 && (
