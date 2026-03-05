@@ -36,7 +36,7 @@ export function Dashboard() {
     };
   };
 
-  const [timeRange, setTimeRange] = useState(getInitialRange());
+  const [timeRange, setTimeRange] = useState<{ start: Date | undefined; end: Date | undefined }>(getInitialRange());
 
   const handleTimeRangeChange = (
     range: { start: Date | undefined; end: Date | undefined }
