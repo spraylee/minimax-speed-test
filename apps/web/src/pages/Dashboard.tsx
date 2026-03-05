@@ -131,7 +131,7 @@ export function Dashboard() {
       </div>
 
       {/* 趋势图表 */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>生成速度趋势</CardTitle>
