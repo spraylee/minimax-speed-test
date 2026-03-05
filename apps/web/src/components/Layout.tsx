@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getUsername, isLoggedIn, logout } from "@/lib/auth";
 
 const navItems = [
@@ -20,6 +22,7 @@ export function Layout() {
   const navigate = useNavigate();
   const loggedIn = isLoggedIn();
   const username = getUsername();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -33,7 +36,7 @@ export function Layout() {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
           <h1 className="mr-8 text-lg font-semibold">MiniMax Speed Test</h1>
-          <nav className="flex gap-1">
+          <nav className="hidden md:flex gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -49,6 +52,41 @@ export function Layout() {
               </Link>
             ))}
           </nav>
+
+          {/* 移动端汉堡菜单 */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
+          {/* 主题切换 */}
+          <ThemeToggle />
+
+          {/* 移动端下拉菜单 */}
+          {mobileMenuOpen && (
+            <div className="md:hidden absolute top-14 left-0 right-0 bg-background border-b p-4">
+              <nav className="flex flex-col space-y-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      location.pathname === item.path
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          )}
 
           {/* 认证区域 */}
           <div className="ml-auto">
