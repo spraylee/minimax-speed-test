@@ -9,7 +9,9 @@
     "dev:all": "pnpm --parallel --filter @minimax-speed-test/server --filter @minimax-speed-test/web dev",
     "build": "pnpm --filter @minimax-speed-test/server build",
     "build:web": "pnpm --filter @minimax-speed-test/web build",
-    "start": "pnpm --filter @minimax-speed-test/server start"
+    "start": "pnpm --filter @minimax-speed-test/server start",
+    "typecheck": "pnpm -r typecheck",
+    "prepare": "simple-git-hooks"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -17,5 +19,11 @@
       "esbuild",
       "prisma"
     ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm typecheck && pnpm build:web"
+  },
+  "devDependencies": {
+    "simple-git-hooks": "^2.13.1"
   }
 }
