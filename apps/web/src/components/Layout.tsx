@@ -62,8 +62,10 @@ export function Layout() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          {/* 主题切换 */}
-          <ThemeToggle />
+          <div className="ml-auto flex items-center gap-2">
+            {/* 主题切换 */}
+            <ThemeToggle />
+          </div>
 
           {/* 移动端下拉菜单 */}
           {mobileMenuOpen && (

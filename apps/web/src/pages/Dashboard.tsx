@@ -83,27 +83,25 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* 顶部统计 + 操作 */}
-      <div className="flex items-center justify-between">
+      {/* 顶部标题 + 时间筛选 + 操作 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">
             MiniMax 模型速度对比监控
           </p>
         </div>
-        {isLoggedIn() && (
-          <Button
-            onClick={() => triggerMutation.mutate()}
-            disabled={triggerMutation.isPending}
-          >
-            {triggerMutation.isPending ? "运行中..." : "手动触发测试"}
-          </Button>
-        )}
-      </div>
-
-      {/* 时间范围筛选 */}
-      <div className="flex items-center justify-between">
-        <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
+        <div className="flex items-center gap-2">
+          <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
+          {isLoggedIn() && (
+            <Button
+              onClick={() => triggerMutation.mutate()}
+              disabled={triggerMutation.isPending}
+            >
+              {triggerMutation.isPending ? "运行中..." : "手动触发测试"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* 统计卡片 */}
