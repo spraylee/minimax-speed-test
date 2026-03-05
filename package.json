@@ -11,7 +11,7 @@
     "build:web": "pnpm --filter @minimax-speed-test/web build",
     "start": "pnpm --filter @minimax-speed-test/server start",
     "typecheck": "pnpm -r typecheck",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install || true"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
