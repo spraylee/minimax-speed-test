@@ -187,18 +187,43 @@ export const benchmarkRouter = router({
     }),
 
   // 最新一次运行的对比数据
-  getLatestComparison: publicProcedure.query(async () => {
-    const latestRun = await prisma.benchmarkRun.findFirst({
-      where: { status: "completed" },
-      orderBy: { startedAt: "desc" },
-      include: {
-        results: {
-          where: { error: null },
-        },
-      },
-    });
+  getLatestComparison: publicProcedure
+    .input(
+      z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const where: Record<string, unknown> = {
+        status: "completed",
+      };
 
-    if (!latestRun) return null;
+      if (input.startDate || input.endDate) {
+        where.startedAt = {};
+        if (input.startDate) {
+          (where.startedAt as Record<string, unknown>).gte = new Date(
+            input.startDate
+          );
+        }
+        if (input.endDate) {
+          (where.startedAt as Record<string, unknown>).lte = new Date(
+            input.endDate
+          );
+        }
+      }
+
+      const latestRun = await prisma.benchmarkRun.findFirst({
+        where,
+        orderBy: { startedAt: "desc" },
+        include: {
+          results: {
+            where: { error: null },
+          },
+        },
+      });
+
+      if (!latestRun) return null;
 
     const modelStats = new Map<
       string,
