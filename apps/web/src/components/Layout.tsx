@@ -45,7 +45,7 @@ export function Layout() {
                   "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   location.pathname === item.path
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >
                 {item.label}
@@ -59,7 +59,11 @@ export function Layout() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
 
           <div className="ml-auto flex items-center gap-2">
@@ -80,7 +84,7 @@ export function Layout() {
                       "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       location.pathname === item.path
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     {item.label}
@@ -91,7 +95,7 @@ export function Layout() {
           )}
 
           {/* 认证区域 */}
-          <div className="ml-auto">
+          <div>
             {loggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
