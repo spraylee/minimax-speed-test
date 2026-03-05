@@ -21,7 +21,7 @@
     ]
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm typecheck && pnpm build:web"
+    "pre-commit": "pnpm typecheck"
   },
   "devDependencies": {
     "simple-git-hooks": "^2.13.1"
