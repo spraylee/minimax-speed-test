@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { useTRPC } from "@/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -15,12 +16,18 @@ import { LatencyChart } from "@/components/LatencyChart";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { TimeRangeSelector } from "@/components/TimeRangeSelector";
 import { isLoggedIn } from "@/lib/auth";
+import { applyChartTheme } from "@/chartSetup";
 import dayjs from "dayjs";
 
 export function Dashboard() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  // 在渲染阶段同步更新 Chart.js 全局主题色，确保子图表组件的 useMemo 能读到最新值
+  applyChartTheme(isDark);
 
   // 解析 URL 参数或默认 7 天
   const getInitialRange = () => {
@@ -36,11 +43,15 @@ export function Dashboard() {
     };
   };
 
-  const [timeRange, setTimeRange] = useState<{ start: Date | undefined; end: Date | undefined }>(getInitialRange());
+  const [timeRange, setTimeRange] = useState<{
+    start: Date | undefined;
+    end: Date | undefined;
+  }>(getInitialRange());
 
-  const handleTimeRangeChange = (
-    range: { start: Date | undefined; end: Date | undefined }
-  ) => {
+  const handleTimeRangeChange = (range: {
+    start: Date | undefined;
+    end: Date | undefined;
+  }) => {
     setTimeRange(range);
     if (range.start && range.end) {
       setSearchParams({
@@ -56,26 +67,32 @@ export function Dashboard() {
     trpc.benchmark.getModelTrends.queryOptions({
       startDate: timeRange.start?.toISOString(),
       endDate: timeRange.end?.toISOString(),
-    })
+    }),
   );
   const comparisonQuery = useQuery(
     trpc.benchmark.getLatestComparison.queryOptions({
       startDate: timeRange.start?.toISOString(),
       endDate: timeRange.end?.toISOString(),
-    })
+    }),
   );
   const runsQuery = useQuery(
-    trpc.benchmark.listRuns.queryOptions({ page: 1, pageSize: 1 })
+    trpc.benchmark.listRuns.queryOptions({ page: 1, pageSize: 1 }),
   );
 
   const triggerMutation = useMutation(
     trpc.benchmark.triggerRun.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.listRuns.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getModelTrends.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.benchmark.getLatestComparison.queryKey() });
+        queryClient.invalidateQueries({
+          queryKey: trpc.benchmark.listRuns.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.benchmark.getModelTrends.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.benchmark.getLatestComparison.queryKey(),
+        });
       },
-    })
+    }),
   );
 
   const totalRuns = runsQuery.data?.total ?? 0;
@@ -87,12 +104,13 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            MiniMax 模型速度对比监控
-          </p>
+          <p className="text-muted-foreground">MiniMax 模型速度对比监控</p>
         </div>
         <div className="flex items-center gap-2">
-          <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
+          <TimeRangeSelector
+            value={timeRange}
+            onChange={handleTimeRangeChange}
+          />
           {isLoggedIn() && (
             <Button
               onClick={() => triggerMutation.mutate()}
@@ -170,7 +188,7 @@ export function Dashboard() {
             <CardDescription>
               运行 #{comparisonQuery.data.runId} -{" "}
               {dayjs(comparisonQuery.data.startedAt).format(
-                "YYYY-MM-DD HH:mm:ss"
+                "YYYY-MM-DD HH:mm:ss",
               )}
             </CardDescription>
           </CardHeader>

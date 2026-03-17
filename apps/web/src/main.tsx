@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TRPCProvider, trpcClient } from "./trpc";
 import { App } from "./App";
 import "./index.css";
+import "./chartSetup";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,5 +22,5 @@ createRoot(document.getElementById("root")!).render(
         <App />
       </QueryClientProvider>
     </TRPCProvider>
-  </StrictMode>
+  </StrictMode>,
 );

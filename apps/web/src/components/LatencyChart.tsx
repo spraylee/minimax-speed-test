@@ -1,16 +1,7 @@
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useTheme } from "next-themes";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { Line } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import dayjs from "dayjs";
 
 interface TrendPoint {
@@ -34,15 +25,9 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-        暂无趋势数据
-      </div>
-    );
-  }
+  const { chartData, options } = useMemo(() => {
+    if (!data || data.length === 0) return { chartData: null, options: null };
 
-  const { chartData, models, labelMap } = useMemo(() => {
     const modelSet = new Set<string>();
     const labelMap: Record<string, string> = {};
 
@@ -53,66 +38,82 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
       }
     }
 
-    const chartData = data.map((d) => {
-      const row: Record<string, number | null> = {
-        time: dayjs(d.time).valueOf(),
-      };
-      for (const m of d.models) {
-        row[m.model] = m.avgDuration;
-      }
-      return row;
-    });
+    const models = Array.from(modelSet);
+    const timestamps = data.map((d) => dayjs(d.time).valueOf());
 
-    return { chartData, models: Array.from(modelSet), labelMap };
-  }, [data]);
+    const datasets = models.map((model) => ({
+      label: labelMap[model] || model,
+      data: data.map((d) => {
+        const found = d.models.find((m) => m.model === model);
+        return found ? found.avgDuration : null;
+      }),
+      borderColor: MODEL_COLORS[model] ?? "#888",
+      backgroundColor: MODEL_COLORS[model] ?? "#888",
+      borderWidth: 2,
+      pointRadius: 2,
+      pointHoverRadius: 4,
+      tension: 0.3,
+      spanGaps: true,
+    }));
+
+    const chartData = {
+      labels: timestamps,
+      datasets,
+    };
+
+    const options: ChartOptions<"line"> = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index" as const,
+        intersect: false,
+      },
+      scales: {
+        x: {
+          type: "time" as const,
+          time: {
+            tooltipFormat: "MM-DD HH:mm",
+            displayFormats: { hour: "MM-DD HH:mm", day: "MM-DD" },
+          },
+          grid: { display: false },
+          ticks: { font: { size: 11 } },
+        },
+        y: {
+          title: { display: true, text: "ms", font: { size: 11 } },
+          ticks: { font: { size: 11 } },
+          grid: { drawTicks: false },
+        },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? "-"} ms`,
+          },
+        },
+        legend: {
+          labels: {
+            font: { size: 12 },
+            usePointStyle: true,
+            pointStyle: "circle",
+          },
+        },
+      },
+    };
+
+    return { chartData, options };
+  }, [data, isDark]);
+
+  if (!chartData || !options) {
+    return (
+      <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+        暂无趋势数据
+      </div>
+    );
+  }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData} margin={{ top: 8, right: 16, left: 4, bottom: 0 }}>
-        <CartesianGrid
-          vertical={false}
-          strokeDasharray="3 3"
-          stroke={isDark ? "#374151" : "#e5e7eb"}
-        />
-        <XAxis
-          dataKey="time"
-          type="number"
-          scale="time"
-          domain={["dataMin", "dataMax"]}
-          tickFormatter={(v: number) => dayjs(v).format("MM-DD HH:mm")}
-          fontSize={11}
-          stroke={isDark ? "#9ca3af" : "#6b7280"}
-          tick={{ fill: isDark ? "#9ca3af" : "#6b7280" }}
-        />
-        <YAxis
-          fontSize={11}
-          stroke={isDark ? "#9ca3af" : "#6b7280"}
-          tick={{ fill: isDark ? "#9ca3af" : "#6b7280" }}
-          label={{ value: "ms", position: "insideTopLeft", offset: -4, fontSize: 11, fill: isDark ? "#9ca3af" : "#6b7280" }}
-        />
-        <Tooltip
-          labelFormatter={(v: ReactNode) => dayjs(Number(v)).format("MM-DD HH:mm")}
-          formatter={(value: number | undefined) => [`${value ?? '-'} ms`]}
-          contentStyle={{
-            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-            borderColor: isDark ? "#374151" : "#e5e7eb",
-            color: isDark ? "#f9fafb" : "#111827"
-          }}
-        />
-        <Legend />
-        {models.map((model) => (
-          <Line
-            key={model}
-            type="monotone"
-            dataKey={model}
-            name={labelMap[model] || model}
-            stroke={MODEL_COLORS[model]}
-            strokeWidth={2}
-            dot={{ r: 2 }}
-            connectNulls
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="h-[300px]">
+      <Line data={chartData} options={options} />
+    </div>
   );
 }
