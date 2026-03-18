@@ -10,7 +10,7 @@ export const benchmarkRouter = router({
       z.object({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(1).max(100).default(20),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const { page, pageSize } = input;
@@ -62,13 +62,13 @@ export const benchmarkRouter = router({
             label: stats.label,
             avgDuration: Math.round(
               stats.durations.reduce((a, b) => a + b, 0) /
-                stats.durations.length
+                stats.durations.length,
             ),
             avgTps:
               stats.tps.length > 0
                 ? stats.tps.reduce((a, b) => a + b, 0) / stats.tps.length
                 : null,
-          })
+          }),
         );
 
         return {
@@ -104,7 +104,7 @@ export const benchmarkRouter = router({
       z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const where: Record<string, unknown> = {
@@ -115,12 +115,12 @@ export const benchmarkRouter = router({
         where.startedAt = {};
         if (input.startDate) {
           (where.startedAt as Record<string, unknown>).gte = new Date(
-            input.startDate
+            input.startDate,
           );
         }
         if (input.endDate) {
           (where.startedAt as Record<string, unknown>).lte = new Date(
-            input.endDate
+            input.endDate,
           );
         }
       }
@@ -169,13 +169,13 @@ export const benchmarkRouter = router({
             label: stats.label,
             avgDuration: Math.round(
               stats.durations.reduce((a, b) => a + b, 0) /
-                stats.durations.length
+                stats.durations.length,
             ),
             avgTps:
               stats.tps.length > 0
                 ? stats.tps.reduce((a, b) => a + b, 0) / stats.tps.length
                 : null,
-          })
+          }),
         );
 
         return {
@@ -192,7 +192,7 @@ export const benchmarkRouter = router({
       z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const where: Record<string, unknown> = {
@@ -203,12 +203,12 @@ export const benchmarkRouter = router({
         where.startedAt = {};
         if (input.startDate) {
           (where.startedAt as Record<string, unknown>).gte = new Date(
-            input.startDate
+            input.startDate,
           );
         }
         if (input.endDate) {
           (where.startedAt as Record<string, unknown>).lte = new Date(
-            input.endDate
+            input.endDate,
           );
         }
       }
@@ -225,69 +225,69 @@ export const benchmarkRouter = router({
 
       if (!latestRun) return null;
 
-    const modelStats = new Map<
-      string,
-      {
-        label: string;
-        durations: number[];
-        tps: number[];
-        tokens: number[];
+      const modelStats = new Map<
+        string,
+        {
+          label: string;
+          durations: number[];
+          tps: number[];
+          tokens: number[];
+        }
+      >();
+
+      for (const r of latestRun.results) {
+        if (!modelStats.has(r.model)) {
+          modelStats.set(r.model, {
+            label: r.label,
+            durations: [],
+            tps: [],
+            tokens: [],
+          });
+        }
+        const stats = modelStats.get(r.model)!;
+        stats.durations.push(r.duration);
+        if (r.tokensPerSecond != null) stats.tps.push(r.tokensPerSecond);
+        stats.tokens.push(r.outputTokens);
       }
-    >();
 
-    for (const r of latestRun.results) {
-      if (!modelStats.has(r.model)) {
-        modelStats.set(r.model, {
-          label: r.label,
-          durations: [],
-          tps: [],
-          tokens: [],
-        });
-      }
-      const stats = modelStats.get(r.model)!;
-      stats.durations.push(r.duration);
-      if (r.tokensPerSecond != null) stats.tps.push(r.tokensPerSecond);
-      stats.tokens.push(r.outputTokens);
-    }
-
-    // 以 M2.5 为基准计算速度对比
-    const baseStats = modelStats.get("MiniMax-M2.5");
-    const baseTps =
-      baseStats && baseStats.tps.length > 0
-        ? baseStats.tps.reduce((a, b) => a + b, 0) / baseStats.tps.length
-        : null;
-
-    const models = Array.from(modelStats.entries()).map(([model, stats]) => {
-      const avgTps =
-        stats.tps.length > 0
-          ? stats.tps.reduce((a, b) => a + b, 0) / stats.tps.length
+      // 以 M2.7 为基准计算速度对比
+      const baseStats = modelStats.get("MiniMax-M2.7");
+      const baseTps =
+        baseStats && baseStats.tps.length > 0
+          ? baseStats.tps.reduce((a, b) => a + b, 0) / baseStats.tps.length
           : null;
-      const speedup =
-        avgTps != null && baseTps != null
-          ? ((avgTps - baseTps) / baseTps) * 100
-          : null;
+
+      const models = Array.from(modelStats.entries()).map(([model, stats]) => {
+        const avgTps =
+          stats.tps.length > 0
+            ? stats.tps.reduce((a, b) => a + b, 0) / stats.tps.length
+            : null;
+        const speedup =
+          avgTps != null && baseTps != null
+            ? ((avgTps - baseTps) / baseTps) * 100
+            : null;
+
+        return {
+          model,
+          label: stats.label,
+          avgDuration: Math.round(
+            stats.durations.reduce((a, b) => a + b, 0) / stats.durations.length,
+          ),
+          avgTps,
+          avgTokens: Math.round(
+            stats.tokens.reduce((a, b) => a + b, 0) / stats.tokens.length,
+          ),
+          testCount: stats.durations.length,
+          speedup,
+        };
+      });
 
       return {
-        model,
-        label: stats.label,
-        avgDuration: Math.round(
-          stats.durations.reduce((a, b) => a + b, 0) / stats.durations.length
-        ),
-        avgTps,
-        avgTokens: Math.round(
-          stats.tokens.reduce((a, b) => a + b, 0) / stats.tokens.length
-        ),
-        testCount: stats.durations.length,
-        speedup,
+        runId: latestRun.id,
+        startedAt: latestRun.startedAt,
+        models,
       };
-    });
-
-    return {
-      runId: latestRun.id,
-      startedAt: latestRun.startedAt,
-      models,
-    };
-  }),
+    }),
 
   // 手动触发一次测试（需要登录）
   triggerRun: protectedProcedure.mutation(async () => {

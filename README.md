@@ -1,6 +1,6 @@
 # MiniMax 模型速度对比测试
 
-自动化监控 MiniMax 各版本模型（M2.1、M2.5、M2.5-highspeed）的性能差异，每小时定时测试，结果存入数据库，通过 Web 界面查看趋势。
+自动化监控 MiniMax 各版本模型（M2.1、M2.5、M2.5-highspeed、M2.7、M2.7-highspeed）的性能差异，每小时定时测试，结果存入数据库，通过 Web 界面查看趋势。
 
 ## 技术栈
 
@@ -41,7 +41,7 @@ pnpm dev:all
 
 ## 测试配置
 
-- **模型**: MiniMax-M2.1、MiniMax-M2.5、MiniMax-M2.5-highspeed
+- **模型**: MiniMax-M2.1、MiniMax-M2.5、MiniMax-M2.5-highspeed、MiniMax-M2.7、MiniMax-M2.7-highspeed
 - **限制生成 token**: 256
 - **测试次数**: 3 轮/模型，每轮 5 个不同 prompt
 - **定时任务**: 每小时整点自动执行
@@ -55,6 +55,7 @@ pnpm dev:all
 - Nginx：反向代理 + SSL
 
 首次部署需在服务器创建环境变量文件：
+
 ```bash
 # 在服务器上
 vim /data/apps/minimax-speed-test/.env
@@ -62,8 +63,8 @@ vim /data/apps/minimax-speed-test/.env
 
 ## 环境变量
 
-| 变量 | 说明 |
-|------|------|
-| `MINIMAX_API_KEY` | MiniMax API Key |
-| `DATABASE_URL` | MySQL 连接字符串 |
-| `PORT` | 服务端口（默认 3000） |
+| 变量              | 说明                  |
+| ----------------- | --------------------- |
+| `MINIMAX_API_KEY` | MiniMax API Key       |
+| `DATABASE_URL`    | MySQL 连接字符串      |
+| `PORT`            | 服务端口（默认 3000） |

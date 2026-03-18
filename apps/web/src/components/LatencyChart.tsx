@@ -16,9 +16,19 @@ interface TrendPoint {
 }
 
 const MODEL_COLORS: Record<string, string> = {
+  "MiniMax-M2.7-highspeed": "#ef4444",
+  "MiniMax-M2.7": "#a855f7",
   "MiniMax-M2.5-highspeed": "#22c55e",
   "MiniMax-M2.5": "#3b82f6",
   "MiniMax-M2.1": "#f59e0b",
+};
+
+const MODEL_LABELS: Record<string, string> = {
+  "MiniMax-M2.7-highspeed": "M2.7极速版",
+  "MiniMax-M2.7": "M2.7",
+  "MiniMax-M2.5-highspeed": "M2.5极速版",
+  "MiniMax-M2.5": "M2.5",
+  "MiniMax-M2.1": "M2.1",
 };
 
 export function LatencyChart({ data }: { data: TrendPoint[] }) {
@@ -42,7 +52,7 @@ export function LatencyChart({ data }: { data: TrendPoint[] }) {
     const timestamps = data.map((d) => dayjs(d.time).valueOf());
 
     const datasets = models.map((model) => ({
-      label: labelMap[model] || model,
+      label: MODEL_LABELS[model] || labelMap[model] || model,
       data: data.map((d) => {
         const found = d.models.find((m) => m.model === model);
         return found ? found.avgDuration : null;

@@ -6,8 +6,10 @@ const API_KEY = process.env.MINIMAX_API_KEY;
 const BASE_URL = "https://api.minimaxi.com/anthropic";
 
 export const MODELS = [
-  { name: "MiniMax-M2.5-highspeed", label: "极速版" },
-  { name: "MiniMax-M2.5", label: "标准版" },
+  { name: "MiniMax-M2.7-highspeed", label: "M2.7极速版" },
+  { name: "MiniMax-M2.7", label: "M2.7" },
+  { name: "MiniMax-M2.5-highspeed", label: "M2.5极速版" },
+  { name: "MiniMax-M2.5", label: "M2.5" },
   { name: "MiniMax-M2.1", label: "M2.1" },
 ];
 
@@ -39,7 +41,7 @@ function createClient() {
 async function testModel(
   client: Anthropic,
   modelName: string,
-  prompt: string
+  prompt: string,
 ): Promise<{
   duration: number;
   outputTokens: number;
@@ -97,7 +99,7 @@ export async function runBenchmark(): Promise<number> {
               ? `(${result.tokensPerSecond.toFixed(1)} tok/s, ${result.outputTokens} tokens)`
               : "";
             console.log(
-              `  [OK] ${result.duration}ms ${tps} - ${prompt.slice(0, 20)}...`
+              `  [OK] ${result.duration}ms ${tps} - ${prompt.slice(0, 20)}...`,
             );
           } catch (error) {
             const errMsg =
