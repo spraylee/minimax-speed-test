@@ -90,9 +90,9 @@ export function History() {
                       <TableHead className="w-16">#</TableHead>
                       <TableHead>时间</TableHead>
                       <TableHead>状态</TableHead>
-                      {["极速版", "标准版", "M2.1"].map((label) => (
-                        <TableHead key={label} className="text-right">
-                          {label} (tok/s)
+                      {(data.runs[0]?.models ?? []).map((model) => (
+                        <TableHead key={model.label} className="text-right">
+                          {model.label} (tok/s)
                         </TableHead>
                       ))}
                       {isLoggedIn() && (
@@ -118,18 +118,11 @@ export function History() {
                           <TableCell>
                             <StatusBadge status={run.status} />
                           </TableCell>
-                          {["极速版", "标准版", "M2.1"].map((label) => {
-                            const model = run.models.find(
-                              (m) => m.label === label
-                            );
-                            return (
-                              <TableCell key={label} className="text-right">
-                                {model?.avgTps != null
-                                  ? model.avgTps.toFixed(1)
-                                  : "-"}
-                              </TableCell>
-                            );
-                          })}
+                          {run.models.map((m) => (
+                            <TableCell key={m.label} className="text-right">
+                              {m.avgTps != null ? m.avgTps.toFixed(1) : "-"}
+                            </TableCell>
+                          ))}
                           {isLoggedIn() && (
                             <TableCell className="text-right">
                               <AlertDialog>
@@ -167,7 +160,7 @@ export function History() {
                         </TableRow>
                         {expandedRunId === run.id && (
                           <TableRow>
-                            <TableCell colSpan={isLoggedIn() ? 8 : 7} className="p-0">
+                            <TableCell colSpan={3 + run.models.length + (isLoggedIn() ? 1 : 0)} className="p-0">
                               <RunDetail runId={run.id} />
                             </TableCell>
                           </TableRow>
@@ -194,15 +187,12 @@ export function History() {
                           <span className="text-muted-foreground">时间</span>
                           <span>{dayjs(run.startedAt).format("YYYY-MM-DD HH:mm:ss")}</span>
                         </div>
-                        {["极速版", "标准版", "M2.1"].map((label) => {
-                          const model = run.models.find((m) => m.label === label);
-                          return (
-                            <div key={label} className="flex justify-between">
-                              <span className="text-muted-foreground">{label}</span>
-                              <span>{model?.avgTps != null ? model.avgTps.toFixed(1) : "-"} tok/s</span>
-                            </div>
-                          );
-                        })}
+                        {run.models.map((m) => (
+                          <div key={m.label} className="flex justify-between">
+                            <span className="text-muted-foreground">{m.label}</span>
+                            <span>{m.avgTps != null ? m.avgTps.toFixed(1) : "-"} tok/s</span>
+                          </div>
+                        ))}
                       </div>
                       {expandedRunId === run.id && (
                         <div className="mt-4 pt-4 border-t">
